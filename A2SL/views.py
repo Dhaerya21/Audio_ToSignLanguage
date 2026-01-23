@@ -10,7 +10,6 @@ from nltk.corpus import wordnet
 from googletrans import Translator
 import re  # <--- NEW: Regular Expressions for text cleaning
 
-# --- HELPER FUNCTIONS ---
 
 def get_wordnet_pos(tag):
     if tag.startswith('J'):
@@ -24,11 +23,6 @@ def get_wordnet_pos(tag):
     return wordnet.NOUN
 
 def clean_text(text):
-    """
-    Expands contractions and removes special characters.
-    I'm -> I am
-    It's -> It is
-    """
     text = text.lower()
     
     # Expand common English contractions
@@ -46,8 +40,6 @@ def clean_text(text):
     
     return text
 
-# --- VIEWS ---
-
 def home_view(request):
     return render(request, 'home.html')
 
@@ -64,7 +56,7 @@ def animation_view(request):
         if not original_text:
             return render(request, 'animation.html')
 
-        # 1. Translation Layer (Multilingual Support)
+        # Translation Layer (Multilingual Support)
         try:
             translator = Translator()
             translation = translator.translate(original_text, dest='en')
@@ -72,15 +64,14 @@ def animation_view(request):
         except Exception:
             text_en = original_text
 
-        # 2. Text Cleaning (The Fix for "Nan nalam")
-        # "I'm fine" becomes "i am fine"
+        # Text Cleaning 
         clean_en = clean_text(text_en)
 
-        # 3. Tokenization & Tagging
+        # Tokenization & Tagging
         words = word_tokenize(clean_en)
         tagged = nltk.pos_tag(words)
 
-        # 4. Glossing (English -> ASL Logic)
+        # Glossing (English -> ASL Logic)
         lr = WordNetLemmatizer()
         gloss_words = []
 
