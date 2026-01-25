@@ -1,133 +1,315 @@
 {% extends 'base.html' %}
 {% load static %}
 
-
 {% block content %}
-<div class="split left">
-	<h2 align="center">Enter Text or Use Mic</h2>
-	<br>
-		<form action="" method="post" align="left">
-		{% csrf_token %}
-					<input type="text" name="sen" class="mytext" id="speechToText" placeholder="">
-					<button type="button" name="button" class="mic" onclick="record()"><img src="{% static 'mic3.png' %}" height="32px" width="38px" /></button>
-		  			&nbsp&nbsp&nbsp&nbsp
-		  			<input type="submit" name="submit" class="submit">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-		</form>
-		<br>
-		<table cellspacing="20px">
-			<tr>
-				<td class="td">The text that you entered is:</td>
-				<td class="td">{{ text }}</td>
-			</tr>
-			<tr>
-				<td class="td">Key words in sentence:</td>
-				<td class="td">
-				<ul class="td" id="list" align="center">
-  					{% for word in words %}
-    				<li id="{{ i }}" style="margin-right: 8px">{{ word }}</li>
-  					{% endfor %}
-				</ul>
-			</td>
-		</tr>
-	</table></div>
-  <div class="split right">
-  <h2 align="center">Sign Language Animation</h2>
+<div class="split-screen">
+    <div class="input-section">
+        <h2 style="color: #ffc107;">Live Speech to Sign</h2>
+        
+        <div class="controls">
+            <label for="language-select" style="color: #aaa; font-size: 12px;">Select Language:</label>
+            <select id="language-select" style="width: 100%;">
+                <optgroup label="Indian Languages">
+                    <option value="hi-IN" selected>Hindi (India)</option>
+                    <option value="ta-IN">Tamil (India)</option>
+                    <option value="te-IN">Telugu (India)</option>
+                    <option value="kn-IN">Kannada (India)</option>
+                    <option value="ml-IN">Malayalam (India)</option>
+                    <option value="mr-IN">Marathi (India)</option>
+                    <option value="gu-IN">Gujarati (India)</option>
+                    <option value="bn-IN">Bengali (India)</option>
+                </optgroup>
+                <optgroup label="Global Languages">
+                    <option value="en-US">English (US)</option>
+                    <option value="fr-FR">French (France)</option>
+                    <option value="es-ES">Spanish (Spain)</option>
+                </optgroup>
+            </select>
 
-	<div style="text-align:center">	&nbsp&nbsp
-  	<button class="submit" onclick="playPause()">Play/Pause</button>
-  	<!--  LETS USE ONLY PLAY PAUSE BUTTON WITH 720 *420 ,IT FITS THE SCREEN ASHISH
+            <button id="start-btn" class="btn-mic" onclick="toggleRecording()">
+                🎤 Start Live Listening
+            </button>
+        </div>
 
-  	<button onclick="makeBig()">Big</button>
-  	<button onclick="makeSmall()">Small</button>
-  	<button onclick="makeNormal()">Normal</button>-->
+        <div class="queue-container">
+            
+            <div class="queue-box current-box">
+                <span class="queue-label">▶️ NOW SIGNING</span>
+                <p id="current-sentence-text">Waiting for input...</p>
+                <div id="current-word-badge" class="word-badge">...</div>
+            </div>
 
+            <div class="queue-box upcoming-box">
+                <span class="queue-label">⏳ UP NEXT (BUFFER)</span>
+                <ul id="upcoming-list">
+                    </ul>
+            </div>
 
-  	<video id="videoPlayer" width="600" height="350"  preload="auto" autoplay>
-    	<source src="" type="video/mp4">
-    Your browser does not support HTML5 video.
-  	</video>
-  	</div></div>
+            <div class="queue-box heard-box">
+                <span class="queue-label">🔴 MIC INPUT (LATEST)</span>
+                <p id="live-text" style="color: #fff; font-style: italic;">...</p>
+            </div>
+        </div>
+    </div> 
 
+    <div class="display-section">
+        <div class="avatar-container">
+            <video id="sign-video" width="100%" height="auto" autoplay playsinline style="border: 2px solid #ffc107; border-radius: 10px;">
+                <source src="" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div id="main-word-display" class="word-display">READY</div>
+    </div>
+</div>
 
 <script>
-	//webkitSpeechRecognition api for speech to text conversion
-	function record(){
-		var recognition = new webkitSpeechRecognition();
-		recognition.lang='en-IN';
+    // --- INITIALIZATION ---
+    $(document).ready(function() {
+        $('#language-select').select2({ placeholder: "Search language...", allowClear: false });
+    });
 
-		recognition.onresult = function(event){
-			console.log(event)
-			document.getElementById('speechToText').value = event.results[0][0].transcript;
-		}
-		recognition.start();
-	 }
-	function play()
-	{
-		var videoSource = new Array();
-		var	videos = document.getElementById("list").getElementsByTagName("li");
-		var j;
-		for(j=0;j<videos.length;j++)
-		{
-			videoSource[j] = "/static/" + videos[j].innerHTML +".mp4";
-		}
+    // --- VARIABLES ---
+    let recognition;
+    let isRecording = false;
+    let isPlaying = false;
+    
+    // THE NEW QUEUE SYSTEM
+    // Instead of a flat list of words, we store "Sentence Objects"
+    // Structure: { text: "Hello world", words: ["me", "hello"], wordIndex: 0 }
+    let playbackQueue = []; 
 
-		var i = 0; // define i
-		var videoCount = videoSource.length;
+    const videoPlayer = document.getElementById('sign-video');
+    const mainWordDisplay = document.getElementById('main-word-display');
+    const currentSentenceText = document.getElementById('current-sentence-text');
+    const currentWordBadge = document.getElementById('current-word-badge');
+    const upcomingList = document.getElementById('upcoming-list');
+    const liveText = document.getElementById('live-text');
 
-		function videoPlay(videoNum)
-		{
-			document.getElementById("list").getElementsByTagName("li")[videoNum].style.color = "#09edc7";
-			document.getElementById("list").getElementsByTagName("li")[videoNum].style.fontSize = "xx-large";
-			document.getElementById("videoPlayer").setAttribute("src", videoSource[videoNum]);
-	    	document.getElementById("videoPlayer").load();
-	    	document.getElementById("videoPlayer").play();
+    // --- SPEECH RECOGNITION ---
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = true; 
+        recognition.interimResults = false; 
+        recognition.lang = 'hi-IN'; 
 
-		}
-		document.getElementById('videoPlayer').addEventListener('ended', myHandler, false);
-		document.getElementById("list").getElementsByTagName("li")[0].style.color = "#09edc7";
-		document.getElementById("list").getElementsByTagName("li")[0].style.fontSize = "xx-large";
+        recognition.onresult = function(event) {
+            const lastIndex = event.results.length - 1;
+            const transcript = event.results[lastIndex][0].transcript;
+            
+            // Show immediate feedback in the "Mic Input" box
+            liveText.innerText = transcript;
+            
+            // Send to backend
+            processSentence(transcript);
+        };
 
-		videoPlay(0); // play the video
+        recognition.onend = function() { if (isRecording) recognition.start(); };
+    } else {
+        alert("Use Chrome for Speech API.");
+    }
 
-		function myHandler()
-		{
-	 		document.getElementById("list").getElementsByTagName("li")[i].style.color = "#feda6a";
-			document.getElementById("list").getElementsByTagName("li")[i].style.fontSize = "20px";
-			i++;
-	    	if (i == videoCount)
-	    	{
-	       	    document.getElementById("videoPlayer").pause();
-	    	}
-	     	else
-	     	{
-	        	videoPlay(i);
-	    	}
-		}
-	}
-	/* LETS USE ONLY PLAY PAUSE BUTTON WITH 720 *420 ,IT FITS THE SCREEN
-	function makeBig() {
-	    document.getElementById("videoPlayer").width = 560;
-		document.getElementById("videoPlayer").height = 360;
-	}
+    function toggleRecording() {
+        if (isRecording) {
+            recognition.stop();
+            document.getElementById('start-btn').innerText = "🎤 Start Live Listening";
+            document.getElementById('start-btn').style.background = "#ffc107";
+            isRecording = false;
+        } else {
+            recognition.lang = $('#language-select').val(); 
+            recognition.start();
+            document.getElementById('start-btn').innerText = "Fn Stop Listening";
+            document.getElementById('start-btn').style.background = "#ff5722"; 
+            isRecording = true;
+        }
+    }
 
-	function makeSmall() {
-	    document.getElementById("videoPlayer").width = 320;
-		document.getElementById("videoPlayer").height = 180;
-	}
+    // --- BACKEND COMMUNICATION ---
+    function processSentence(text) {
+        const formData = new FormData();
+        formData.append('sen', text);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-	function makeNormal() {
-	    document.getElementById("videoPlayer").width = 420;
-		document.getElementById("videoPlayer").height =280;
-	}*/
-	function playPause(){
-  		if (document.getElementById("videoPlayer").paused){
-    		play();}
-  		else{
-    		document.getElementById("videoPlayer").pause();}
-		}
+        // Add a "Ghost" item to UI immediately to show we are working
+        addGhostToQueue(text);
 
-	</script>
+        fetch("{% url 'animation' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Convert the ghost item to a real playable item
+            finalizeQueueItem(text, data.words, data.text); // data.text is the translated English
+            
+            if (!isPlaying) {
+                playNextInQueue();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
+    // --- QUEUE UI LOGIC ---
+    
+    function addGhostToQueue(originalText) {
+        // Create a pending item in the visual list
+        const li = document.createElement('li');
+        li.innerText = originalText + " (Translating...)";
+        li.id = "q-" + originalText.replace(/\s/g, '').substring(0, 10); // Simple ID
+        li.style.color = "#aaa";
+        upcomingList.appendChild(li);
+    }
 
+    function finalizeQueueItem(originalText, words, translatedText) {
+        // Update the visual list
+        const id = "q-" + originalText.replace(/\s/g, '').substring(0, 10);
+        const li = document.getElementById(id);
+        if (li) {
+            li.remove(); // Remove ghost
+        }
+
+        // Add real object to Logic Queue
+        playbackQueue.push({
+            original: originalText,
+            translated: translatedText,
+            words: words,
+            wordIndex: 0
+        });
+
+        updateUpcomingUI();
+    }
+
+    function updateUpcomingUI() {
+        upcomingList.innerHTML = "";
+        // Skip the first one (index 0) because that is "Now Playing" (if playing)
+        // If isPlaying is false, we show everything. If true, start from 1.
+        
+        let startIndex = isPlaying ? 0 : 0; 
+        
+        // Actually, simpler logic: playbackQueue contains EVERYTHING waiting to be fully finished.
+        // We just display them all, but style the first one differently? 
+        // No, let's keep the "Upcoming" box strictly for things NOT active yet.
+        
+        // Items waiting in line
+        const waitingItems = isPlaying ? playbackQueue.slice(1) : playbackQueue;
+
+        waitingItems.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${item.original}</strong> <br><span style="font-size:12px; color:#aaa;">${item.translated}</span>`;
+            upcomingList.appendChild(li);
+        });
+    }
+
+    // --- PLAYBACK LOGIC (THE HEART OF THE SYSTEM) ---
+
+    function playNextInQueue() {
+        if (playbackQueue.length === 0) {
+            isPlaying = false;
+            currentSentenceText.innerText = "Idle";
+            currentWordBadge.innerText = "...";
+            mainWordDisplay.innerText = "IDLE";
+            return;
+        }
+
+        isPlaying = true;
+        const currentItem = playbackQueue[0]; // Look at first item
+
+        // Update "Now Playing" UI
+        currentSentenceText.innerText = currentItem.original;
+        updateUpcomingUI(); // Refresh list to remove the current one from "Upcoming"
+
+        // check if we finished this sentence
+        if (currentItem.wordIndex >= currentItem.words.length) {
+            // Sentence Done! Remove it.
+            playbackQueue.shift();
+            playNextInQueue(); // Recursively start next sentence
+            return;
+        }
+
+        // Play the specific word
+        const word = currentItem.words[currentItem.wordIndex];
+        
+        // Update Word UI
+        currentWordBadge.innerText = word;
+        mainWordDisplay.innerText = word.toUpperCase();
+        
+        // Increment for next time
+        currentItem.wordIndex++;
+
+        // Play Video
+        videoPlayer.src = "{% static '' %}" + word + ".mp4"; 
+        videoPlayer.play().catch(e => {
+            console.log("Missing video: " + word);
+            playNextInQueue(); // Skip to next word/sentence on error
+        });
+    }
+
+    videoPlayer.onended = function() {
+        playNextInQueue();
+    };
+
+</script>
+
+<style>
+    /* LAYOUT */
+    .split-screen { display: flex; min-height: 85vh; gap: 20px; padding: 30px; }
+    .input-section, .display-section { flex: 1; padding: 25px; background: #2c2c2c; color: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    
+    /* QUEUE BOX STYLES */
+    .queue-container { margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
+    
+    .queue-box {
+        background: #3a3a3a;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 5px solid #555;
+    }
+
+    .queue-label {
+        font-size: 10px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        color: #888;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    /* SPECIFIC BOX COLORS */
+    .current-box { border-left-color: #ffc107; background: #3d3522; } /* Yellowish */
+    .current-box p { font-size: 18px; font-weight: bold; margin: 0; color: #fff; }
+    
+    .upcoming-box { border-left-color: #2196f3; min-height: 80px; } /* Blue */
+    .upcoming-box ul { list-style: none; padding: 0; margin: 0; }
+    .upcoming-box li { padding: 8px 0; border-bottom: 1px solid #444; font-size: 14px; }
+
+    .heard-box { border-left-color: #f44336; } /* Red */
+
+    .word-badge {
+        display: inline-block;
+        background: #ffc107;
+        color: black;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .btn-mic { background: #ffc107; color: black; border: none; padding: 15px; width: 100%; border-radius: 5px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+    .word-display { font-size: 40px; text-align: center; margin-top: 20px; color: #ffc107; font-weight: bold; }
+    
+    /* Select2 Dark Mode Tweaks (Same as before) */
+    .select2-container--default .select2-selection--single { background-color: #444 !important; border: 1px solid #555 !important; height: 40px !important; display: flex !important; align-items: center !important; }
+    .select2-container--default .select2-selection--single .select2-selection__rendered { color: white !important; }
+    .select2-dropdown { background-color: #444 !important; border: 1px solid #555 !important; }
+    .select2-results__option { color: white !important; }
+    .select2-results__option--highlighted { background-color: #ffc107 !important; color: black !important; }
+    .select2-search__field { background-color: #555 !important; color: white !important; }
+</style>
 {% endblock %}

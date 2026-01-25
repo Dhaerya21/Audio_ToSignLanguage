@@ -3,13 +3,13 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles import finders
+from django.http import JsonResponse  # <--- FIXED: Added missing import
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
 from googletrans import Translator
-import re  # <--- NEW: Regular Expressions for text cleaning
-
+import re 
 
 def get_wordnet_pos(tag):
     if tag.startswith('J'):
@@ -24,7 +24,6 @@ def get_wordnet_pos(tag):
 
 def clean_text(text):
     text = text.lower()
-    
     # Expand common English contractions
     text = re.sub(r"n\'t", " not", text)
     text = re.sub(r"\'re", " are", text)
@@ -34,10 +33,8 @@ def clean_text(text):
     text = re.sub(r"\'t", " not", text)
     text = re.sub(r"\'ve", " have", text)
     text = re.sub(r"\'m", " am", text)
-    
     # Remove any remaining punctuation (keeping only letters and numbers)
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
-    
     return text
 
 def home_view(request):
@@ -76,18 +73,19 @@ def animation_view(request):
         gloss_words = []
 
         for w, tag in tagged:
-            # Skip stopwords (including "am" which we just expanded from 'm)
+            # Skip stopwords
             if w in ['a', 'an', 'the', 'is', 'am', 'are', 'was', 'were', 'to', 'do', 'does', 'did', 'done']:
                 continue
 
             if w == 'i':
                 gloss_words.append('me')
-                continue	
+                continue    
+            
             wn_tag = get_wordnet_pos(tag)
             lemma = lr.lemmatize(w, pos=wn_tag)
             gloss_words.append(lemma)
 
-        # 5. Animation Matching
+        # Animation Matching
         final_words = []
         for w in gloss_words:
             path = w + ".mp4"
@@ -97,6 +95,14 @@ def animation_view(request):
                 for char in w:
                     final_words.append(char)
 
+        # --- REAL TIME AUDIO SUPPORT ---
+        # If the request comes from JavaScript (AJAX), return JSON data
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'words': final_words, 'text': original_text})
+
+        # --- NORMAL PAGE LOAD ---
+        # FIXED: Removed the duplicate return statement. 
+        # This single return handles the standard page load.
         return render(request, 'animation.html', {
             'words': final_words, 
             'text': original_text,
@@ -105,7 +111,7 @@ def animation_view(request):
     else:
         return render(request, 'animation.html')
 
-# ... (Keep existing auth views: signup_view, login_view, logout_view) ...
+# Auth Views
 def signup_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
