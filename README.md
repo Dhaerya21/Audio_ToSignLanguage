@@ -32,8 +32,9 @@ git clone https://github.com/Dhaerya21/Audio_ToSignLanguage.git
 cd Audio_ToSignLanguage
 ```
 ### 2. Set up Virtual Environment
-```bash
 Copy code
+```bash
+
 # Create the environment
 python -m venv urop
 
@@ -45,8 +46,9 @@ source urop/bin/activate
 ```
 
 ### 3. Install Dependencies
-```bash
 Copy code
+```bash
+
 pip install -r requirements.txt
 ```
 
