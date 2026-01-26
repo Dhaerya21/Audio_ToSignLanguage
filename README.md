@@ -55,8 +55,9 @@ Open your PostgreSQL Shell (psql) or pgAdmin and run:
 
 sql
 Copy code 
-
+```bash
 CREATE DATABASE a2sl_db;
+```
 Note: Ensure your A2SL/settings.py database password matches your local PostgreSQL configuration (Default user: postgres).
 
 ### 5. Run Migrations & Server
