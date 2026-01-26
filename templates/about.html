@@ -1,19 +1,51 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
+<style>
+    .text-gold { color: #ffc107 !important; }
+    .bg-dark-card { background-color: #2c2c2c; border-radius: 10px; }
+</style>
 
-<h2>VERSION 1.0.0</h2>
- 	<hr>
-	<h2>We are just a bunch of Enthusiastic people,who wants to help The Society.</h2>
-	<hr>
- 	<h2>Our Creator Team:</h2>
- 	<hr>
- 	<ul class="td">
-		<li>JIGAR GAJJAR</li>
-		<li>ASHISH BAVALIYA</li>
-		<li>DHAIRYA GADANI</li>
- 		<li>NILKANTH PATADIYA</li>
-  	</ul>
-	<hr>
-	<p class="td">Thank you, For visiting our website</p>
+<div class="container mt-5 text-white">
+    <div class="row align-items-center mb-5">
+        <div class="col-md-7">
+            <h1 class="display-4 fw-bold text-gold">Why We Built This</h1>
+            <p class="lead mt-3">
+                Communication is a fundamental human right, yet millions of deaf and hard-of-hearing individuals face barriers every single day. 
+            </p>
+            <p>
+                My name is <strong>Dhaerya Khanna</strong>, and I created this project with a simple goal: to use technology to dismantle those barriers. By translating spoken words into visual Sign Language in real-time, we hope to create a more inclusive society.
+            </p>
+            <blockquote class="blockquote mt-4 p-3 border-start border-warning border-5 bg-dark-card">
+                <p class="mb-0 fst-italic">"We would love to see the world as a better place—one where no voice goes unheard and no sign goes unseen."</p>
+            </blockquote>
+        </div>
+        
+    </div>
+
+    <div class="row text-center mt-5">
+        <div class="col-12 mb-4">
+            <h2 class="text-white border-bottom border-warning d-inline-block pb-2">Our Technology</h2>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="p-4 bg-dark-card h-100 shadow-sm border-top border-warning border-4">
+                <h3 class="text-gold">|  AI Powered</h3>
+                <p>Advanced Natural Language Processing converts complex English sentences into simplified ASL gloss.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="p-4 bg-dark-card h-100 shadow-sm border-top border-warning border-4">
+                <h3 class="text-gold">|  2,000+ Signs</h3>
+                <p>Powered by the WLASL dataset, featuring real human signers for maximum accuracy and emotion.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="p-4 bg-dark-card h-100 shadow-sm border-top border-warning border-4">
+                <h3 class="text-gold">|  Social Impact</h3>
+                <p>Open-source and accessible, designed purely to help people connect with one another.</p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

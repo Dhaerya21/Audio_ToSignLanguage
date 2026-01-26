@@ -77,8 +77,12 @@ WSGI_APPLICATION = 'A2SL.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'a2sl_db',
+        'USER': 'postgres',
+        'PASSWORD': 'Project@123',  # Must match what you typed in the installer
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
