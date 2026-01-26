@@ -7,18 +7,18 @@ Bridging the communication gap for the Deaf and Hard of Hearing community. This 
 
 ## ✨ Key Features
 - **🎙️ Live Speech Recognition:** Uses the Web Speech API to capture audio in real-time.
-- **🌍 Multilingual Support:** Supports English, Hindi, Tamil, Telugu, and other global languages using `googletrans`.
+- **🌍 Multilingual Support:** Supports English, Hindi, Tamil, Telugu, and other global languages.
 - **🧠 NLP Engine:** Intelligent parsing (NLTK) to remove stop words and lemmatize sentences for accurate signing.
 - **🎥 High-Fidelity Assets:** Integrated with the **WLASL (Word-Level American Sign Language)** dataset for realistic human gestures.
 - **⏯️ Playback Control:** Full Pause/Play/Stop functionality with a visual queue buffer.
 - **🛡️ Enterprise Backend:** Powered by **PostgreSQL** for robust data management.
 
 ## 🛠️ Tech Stack
-- **Frontend:** HTML5, CSS3 (Dark Theme), JavaScript (ES6), Bootstrap 4.
-- **Backend:** Python, Django 4.1.
-- **Database:** PostgreSQL.
-- **AI/ML:** NLTK (Natural Language Toolkit), Web Speech API.
-- **Dataset:** WLASL (Video Assets).
+- **Frontend:** HTML5, CSS3 (Dark Theme), JavaScript (ES6), Bootstrap 4
+- **Backend:** Python, Django 4.1
+- **Database:** PostgreSQL
+- **AI/ML:** NLTK (Natural Language Toolkit), Web Speech API
+- **Dataset:** WLASL (Video Assets)
 
 ## ⚙️ Installation Guide
 
@@ -28,31 +28,47 @@ Bridging the communication gap for the Deaf and Hard of Hearing community. This 
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/YOUR_USERNAME/Audio_ToSignLanguage.git](https://github.com/YOUR_USERNAME/Audio_ToSignLanguage.git)
+git clone https://github.com/Dhaerya21/Audio_ToSignLanguage.git
 cd Audio_ToSignLanguage
- 
+```
 ### 2. Set up Virtual Environment
+```bash
+Copy code
+# Create the environment
 python -m venv urop
-# Windows
+
+# Activate it (Windows)
 urop\Scripts\activate
-# Mac/Linux
+
+# Activate it (Mac/Linux)
 source urop/bin/activate
+```
 
 ### 3. Install Dependencies
+```bash
+Copy code
 pip install -r requirements.txt
+```
 
 ### 4. Database Setup
 Open your PostgreSQL Shell (psql) or pgAdmin and run:
 
+sql
+Copy code 
+
 CREATE DATABASE a2sl_db;
+Note: Ensure your A2SL/settings.py database password matches your local PostgreSQL configuration (Default user: postgres).
 
 ### 5. Run Migrations & Server
+```bash
+
 python manage.py migrate
 python manage.py runserver
-
+```
 Visit http://127.0.0.1:8000/animation/ to start the tool.
 
-Contact
-Dhaerya Khanna 📧 dhaeryakhanna1@gmail.com
+🤝 Contact
+Dhaerya Khanna
+📧 dhaeryakhanna1@gmail.com
 
 "We would love to see the world as a better place—one where no voice goes unheard and no sign goes unseen."
