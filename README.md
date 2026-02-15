@@ -75,3 +75,5 @@ Dhaerya Khanna
 📧 dhaeryakhanna1@gmail.com
 
 "We would love to see the world as a better place—one where no voice goes unheard and no sign goes unseen."
+
+C:/Users/dhaer/Downloads/Urop/urop/Scripts/activate.bat
