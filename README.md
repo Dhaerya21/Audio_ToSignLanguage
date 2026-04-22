@@ -1,9 +1,9 @@
 #  A2SL: Audio to Sign Language Converter
 
-**A real-time accessibility tool that translates spoken language into Indian & American Sign Language (ISL/ASL) using Natural Language Processing.**
+**A real-time accessibility tool that translates spoken language into Indian & American Sign Language (ISL/ASL) using NLP.**
 
 ##  Overview
-Bridging the communication gap for the Deaf and Hard of Hearing community. This application listens to live speech, processes the natural language, and instantly renders the corresponding sign language animations using a dictionary of over 2,000+ real human signs.
+Bridging the communication gap for the Deaf and Hard of Hearing community. This application listens to live speech, processes the natural language, and instantly renders the corresponding sign language animations using a dictionary of over 2,500+ real human signs.
 
 ## ✨ Key Features
 - **🎙️ Live Speech Recognition:** Uses the Web Speech API to capture audio in real-time.
@@ -68,6 +68,7 @@ Note: Ensure your A2SL/settings.py database password matches your local PostgreS
 python manage.py migrate
 python manage.py runserver
 ```
+
 Visit http://127.0.0.1:8000/animation/ to start the tool.
 
 🤝 Contact
